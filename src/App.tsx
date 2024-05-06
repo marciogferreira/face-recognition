@@ -39,7 +39,7 @@ function App() {
             <div className="card">
               <form>
                 <input type="text" placeholder="Nome" onChange={(e) => setUserName(e.target.value)} />
-                <button type="submit" onClick={onSaveClient}>Cadastrar</button>
+                <button style={{ backgroundColor: 'green' }} type="submit" onClick={onSaveClient}>Cadastrar</button>
               </form>
             </div>
           </div>
@@ -60,8 +60,8 @@ function App() {
       </div>
       <h1>Sistema de Ponto</h1>
       <h2>Olá, {user.name}</h2>
-      <div className="card">
-        <button onClick={() => { setIsOpenPontoPage(true)}}>
+      <div className="">
+        <button style={{backgroundColor:'green'}} onClick={() => { setIsOpenPontoPage(true)}}>
           Bater Ponto
         </button>
       </div>

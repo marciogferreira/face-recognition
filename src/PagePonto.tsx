@@ -8,6 +8,7 @@ export default function PagePonto(props: { user: IUser }) {
     const [user, setUser] = useState<IUser>(props.user)
     const [captureSuccess, setCaptureSuccess] = useState<boolean>(false)
     const [onError, setOnError] = useState<boolean>(false)
+    const [pontoBatido, setPontoBatido] = useState<boolean>(false)
 
     const onCaptureFace = (faceid: Float32Array) => {
         console.log(faceid)
@@ -23,11 +24,18 @@ export default function PagePonto(props: { user: IUser }) {
         setOnError(true)
     }
 
+    const onFaceMatch = (faceid: Float32Array) => {
+        setOnCapture(false)
+        const ponto = JSON.parse(localStorage.getItem('ponto') ?? "[]")
+        localStorage.setItem('ponto', JSON.stringify([...ponto, { faceid, date: new Date(), user: user.name, status: 'entrada'}]))
+        setPontoBatido(true)
+    }
+
     if(onError) return (
         <div>
             <h1>Olá {user.name}</h1>
             <h2>Erro ao cadastrar tentar fazer a leitura facil</h2>
-            <button onClick={() => setOnError(false)} >Voltar</button>
+            <button style={{ backgroundColor: 'green' }}  onClick={() => setOnError(false)} >Voltar</button>
         </div>
     )
     
@@ -38,7 +46,7 @@ export default function PagePonto(props: { user: IUser }) {
                 <div>
                     <h1>Olá {user.name}</h1>
                     <h2>Vamos iniciar o cadastro da sua leitura ID facial</h2>
-                    <button onClick={() => setOnCapture(true)} >Iniciar Leitura Facial</button>
+                    <button style={{ backgroundColor: 'green' }} onClick={() => setOnCapture(true)} >Iniciar Leitura Facial</button>
                 </div>
             )
     }
@@ -48,16 +56,45 @@ export default function PagePonto(props: { user: IUser }) {
             <div>
                 <h1>Olá {user.name}</h1>
                 <h2>Leitura ID facial cadastrada com sucesso!</h2>
-                <button onClick={() => setCaptureSuccess(false)} >Voltar</button>
+                <button style={{ backgroundColor: 'green' }} onClick={() => setCaptureSuccess(false)} >Voltar</button>
             </div>
         )
     }
 
-    return (
-        <div>
-            <h1>Ponto</h1>
-            <h2>Olá {user.name}</h2>
-        </div>
-    )
+    return onCapture ? (
+        <ReconhecimentoFacial onFaceMatch={onFaceMatch} onCancel={onCancel}  userForMatch={user}/>
+        ) :(
+            <>
+                <div>
+                    <h1>Ponto</h1>
+                    <h2>Olá {user.name}</h2>
+                    {pontoBatido && <h2>Ponto batido com sucesso!</h2>}
+                    <button style={{ backgroundColor: 'green' }}  onClick={() => { setOnCapture(true); setPontoBatido(false) } } >Bater Ponto</button>
+                </div>
+                <div>
+                    <h2>Historico de ponto</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Nome</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            {JSON.parse(localStorage.getItem('ponto') ?? "[]").map((ponto: {date: string, user: string, status: string}) => (
+                                ponto && 
+                                <tr key={ponto.date}>
+                                    <td>{ponto.date}</td>
+                                    <td>{ponto.user}</td>
+                                    <td>{ponto.status}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </>
+        )
     
 }

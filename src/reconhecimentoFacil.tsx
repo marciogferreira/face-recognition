@@ -6,7 +6,7 @@ import { IUser } from './App'
 interface Iprops {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onCapture?: (data:any) => void;
-    onFaceMatch?: () => void;
+    onFaceMatch?: (faceid: Float32Array) => void;
     onCancel?: () => void;
     userForMatch?: IUser;
 }
@@ -15,6 +15,16 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { onCapture, onFaceMatch, onCancel, userForMatch } = props
+    
+    const debug = true
+
+    const [loadinglib, setLoadingLib] = useState(true)
+    //const [streamOk, setStreamOk] = useState(false)
+    const [isCapturing, setIsCapturing] = useState(false)
+
+    const refVideo = useRef<HTMLVideoElement>(null)
+    const refcanvas = useRef<HTMLCanvasElement>(null)
+
 
     const faceValidator: Record<string, { status: boolean | undefined, val: number }> = { // must meet all rules
         faceCount: { status: false, val: 0 },
@@ -37,7 +47,7 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
         cacheSensitivity: 0,
         modelBasePath: '/models',
         filter: { enabled: true, equalization: true }, // lets run with histogram equilizer
-        debug: true,
+        debug: debug,
         face: {
             enabled: true,
             detector: { rotation: true, return: true, mask: false }, // return tensor is used to get detected face image
@@ -66,7 +76,7 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
         blinkMax: 800, // maximum duration of a valid blink
         threshold: 0.5, // minimum similarity
         distanceMin: 0.4, // closest that face is allowed to be to the cammera in cm
-        distanceMax: 1.0, // farthest that face is allowed to be to the cammera in cm
+        distanceMax: 0.6, // farthest that face is allowed to be to the cammera in cm
         mask: humanConfig.face.detector.mask,
         rotation: humanConfig.face.detector.rotation,
         ...matchOptions,
@@ -81,13 +91,8 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
     let startTime = 0;
 
     const human = new Human(humanConfig)
-
-    const [loadinglib, setLoadingLib] = useState(true)
-    //const [streamOk, setStreamOk] = useState(false)
-    const [isCapturing, setIsCapturing] = useState(false)
-
-    const refVideo = useRef<HTMLVideoElement>(null)
-    const refcanvas = useRef<HTMLCanvasElement>(null)
+    const videoWidth = 640
+    const videoHeight = 480 
 
     useEffect(() => {
         human.load().then(() => {
@@ -103,8 +108,12 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
         setIsCapturing(true)
     }, [loadinglib])
 
-    // const videoWidth = 560
-    // const videoHeight = 720 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const log = (msg: any) => {
+        if (!debug) return
+        const now = new Date().toLocaleTimeString()
+        console.log(`${now}: ${msg}`)
+    }
 
     const loadStream = async () => {
         const cameraOptions: MediaStreamConstraints = { audio: false, video: { facingMode: 'user' } };
@@ -112,12 +121,6 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
             .then((stream) => {
                 if (!refVideo.current || !refcanvas.current) return
                 refVideo.current.srcObject = stream;
-                console.log(stream.getVideoTracks()[0].label + " (" + refVideo.current.videoWidth + "x" + refVideo.current.videoHeight + ")")
-                //setStreamOk(true)
-                refcanvas.current.width = refVideo.current.width
-                refcanvas.current.height = refVideo.current.height
-                refcanvas.current.style.width = '50%'
-                refcanvas.current.style.height = '50%'
             })
             .catch((err) => {
                 //TODO tratar erro caso o usario nao permita o uso da camera
@@ -136,15 +139,37 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
         }
     }
 
-    const onCallCapture = (curranteFace: FaceResult) => {
-        console.log(`detected face: ${curranteFace.gender} ${curranteFace.age || 0}y distance ${100 * (curranteFace.distance || 0)}cm/`);
-        if (onCapture) {
-            onCapture(curranteFace.embedding)
+    const onFaceFound = (curranteFace: FaceResult) => {
+        log(`detected face: ${curranteFace.gender} ${curranteFace.age || 0}y distance ${100 * (curranteFace.distance || 0)}cm/`);
+        if (!refVideo.current || !refVideo.current.srcObject){
+            // @ts-ignore: Unreachable code error
+            refVideo.current?.srcObject.getTracks().forEach( stream => stream.stop())
         }
+
+        const faceid = curranteFace.embedding
+
+        if (onCapture) {
+            onCapture(faceid)
+            return
+        }
+        if (faceid && onFaceMatch && userForMatch && userForMatch.faceid && userForMatch.faceid.length > 0) {
+            // @ts-ignore: Unreachable code error
+            const result = human.match.find(faceid, userForMatch.faceid , matchOptions)
+            if(result?.similarity && result.similarity > options.threshold) {
+                //TODO: deveria retornar também uma foto?
+                
+                onFaceMatch(new Float32Array(faceid))
+                return
+            }
+            log('Face not match')
+        }
+
+        onCancelCapture()
+
     }
 
     const onCancelCapture = () => { 
-        console.log('Cancel capture')
+        log('Cancel capture')
         if (onCancel) {
             onCancel()
         }
@@ -165,22 +190,43 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
             && faceValidator.gender.status;
     }
 
-    const drawFace = async () => {
+    const drawElipse = (force: boolean) => {
+        if (!refcanvas.current) return
+        const ctx = refcanvas.current.getContext('2d')
+        if (!ctx) return
+        ctx.fillStyle = "rgba(242, 242, 242, 0.47)"
+        ctx?.beginPath()
+        ctx?.ellipse(320, 240, 120, 180, 0, 0, 2 * Math.PI)
+        ctx?.rect(640, 0, -640, 480)
+        ctx.fill();
+
+        ctx?.beginPath()
+        ctx.lineWidth = 10
+        ctx?.ellipse(320, 240, 120, 180, 0, 0, 2 * Math.PI)
+
+        ctx.strokeStyle = force || (faceValidator.lookingCenter.status && faceValidator.distance.status) ? 'green' : 'red'
+        ctx?.stroke()
+    }
+
+    const drawFace = async (force: boolean) => {
         if (!refcanvas.current || !refVideo.current) return
         const interpolated = human.next(human.result)
         refcanvas.current.getContext('2d')?.clearRect(0, 0, refcanvas.current.width, refcanvas.current.height)
-        human.draw.canvas(refVideo.current, refcanvas.current)
-        await human.draw.all(refcanvas.current, interpolated)
+        drawElipse(force)
+        //human.draw.canvas(refVideo.current, refcanvas.current)
+        if (debug) await human.draw.all(refcanvas.current, interpolated)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const checkFace = async () => {
         if (isCapturing) {
-            drawFace()
+            drawFace(false)
             const face = human.result?.face
-            if (face?.length > 0) {
+            faceValidator.faceCount.val = face.length;
+            faceValidator.faceCount.status = faceValidator.faceCount.val === 1;
+            if (faceValidator.faceCount.status) {
 
-                console.log('Face detected');
+                //console.log('Face detected');
                 const gestures: string[] = Object.values(human.result.gesture).map((gesture: GestureResult) => gesture.gesture); // flatten all gestures
                 if (gestures.includes('blink left eye') || gestures.includes('blink right eye')) blink.start = human.now(); // blink starts when eyes get closed
                 if (blink.start > 0 && !gestures.includes('blink left eye') && !gestures.includes('blink right eye')) blink.end = human.now(); // if blink started how long until eyes are back open
@@ -207,19 +253,23 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
             } 
             faceValidator.timeout.status = faceValidator.elapsedMs.val <= options.maxTime;
             if (allValidationsOk(faceValidator)) {
-                console.log('Face detected and validated')
+                log('Face detected and validated')
+                log(faceValidator)
+                drawFace(true)
+                //sleep for 2 second
+                await new Promise(r => setTimeout(r, 2000))
                 setIsCapturing(false)
-                onCallCapture(face[0])
+                onFaceFound(face[0])
                 return face[0]
             }
             if(!faceValidator.timeout.status) {
-                console.log('Timeout')
+                log('Timeout')
                 setIsCapturing(false)
                 onCancelCapture()
                 return
             }
             faceValidator.elapsedMs.val = Math.trunc(human.now() - startTime);
-            setTimeout(checkFace, 300)
+            setTimeout(checkFace, 100)
         }
     }
 
@@ -238,16 +288,16 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
                         <canvas 
                             ref={refcanvas} 
                             id="canvas"
-                            // height={videoHeight}
-                            // width={videoWidth}
-                            style={{ position:"absolute" }} >
+                            height={videoHeight}
+                            width={videoWidth}
+                            style={{ position:"fixed" }} >
                         </canvas>
                         <video
                             muted
                             autoPlay
                             ref={refVideo}
-                            // height={videoHeight}
-                            //width={120}
+                            height={videoHeight}
+                            width={videoHeight}
                             onPlay={scanFace}
                             playsInline
                             style={{
