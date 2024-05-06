@@ -141,11 +141,9 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
 
     const onFaceFound = (curranteFace: FaceResult) => {
         log(`detected face: ${curranteFace.gender} ${curranteFace.age || 0}y distance ${100 * (curranteFace.distance || 0)}cm/`);
-        if (!refVideo.current || !refVideo.current.srcObject){
-            // @ts-ignore: Unreachable code error
-            refVideo.current?.srcObject.getTracks().forEach( stream => stream.stop())
-        }
-
+        // @ts-ignore: Unreachable code error
+        refVideo.current?.srcObject?.getTracks().forEach( stream => stream.stop())
+        
         const faceid = curranteFace.embedding
 
         if (onCapture) {
