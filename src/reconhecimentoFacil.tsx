@@ -25,7 +25,7 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { onCapture, onFaceMatch, onCancel, userForMatch } = props
     
-    const debug = false
+    const debug = true
 
     const [loadinglib, setLoadingLib] = useState(true)
     //const [streamOk, setStreamOk] = useState(false)
@@ -36,8 +36,7 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
     const refVideo = useRef<HTMLVideoElement>(null)
     const refcanvas = useRef<HTMLCanvasElement>(null)
 
-
-    const faceValidator: Record<string, { status: boolean | undefined, val: number }> = { // must meet all rules
+    const faceValidator: Record<string, { status: boolean | undefined, val: number | number[] }> = { // must meet all rules
         faceCount: { status: false, val: 0 },
         faceConfidence: { status: false, val: 0 },
         facingCenter: { status: false, val: 0 },
@@ -51,7 +50,10 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
         gender: { status: false, val: 0 },
         timeout: { status: true, val: 0 },
         descriptor: { status: false, val: 0 },
+        boxWidth: { status: false, val: 0 },
+        boxHeight: { status: false, val: 0 },
         elapsedMs: { status: undefined, val: 0 }, // total time while waiting for valid face
+        faceAngleInRange: { status: false, val:[0,0] }
     };
 
     const humanConfig = { // user configuration for human, used to fine-tune behavior
@@ -87,7 +89,10 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
         blinkMax: 800, // maximum duration of a valid blink
         threshold: 0.5, // minimum similarity
         distanceMin: 0.4, // closest that face is allowed to be to the cammera in cm
-        distanceMax: 0.6, // farthest that face is allowed to be to the cammera in cm
+        distanceMax: 0.62, // farthest that face is allowed to be to the cammera in cm
+        boxSizeWidth: 120, // size of face box
+        boxSizeHeight: 180, // size of face box
+        maxFaceAngleRange: 20,
         mask: humanConfig.face.detector.mask,
         rotation: humanConfig.face.detector.rotation,
         ...matchOptions,
@@ -102,6 +107,11 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
     let startTime = 0;
 
     const human = new Human(humanConfig)
+
+    human.draw.options.font = `bold small-caps 18px "Rubik"`
+    //human.draw.options.drawLabels = false
+    human.draw.options.drawPolygons = false
+    human.draw.options.drawGaze = false
 
     useEffect(() => {
         human.load().then(() => {
@@ -123,6 +133,8 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
         const now = new Date().toLocaleTimeString()
         console.log(`${now}: ${msg}`)
     }
+
+    const getAngleInDegrees = (angle: number) => angle * 180 / Math.PI
 
     const loadStream = async () => {
         const cameraOptions: MediaStreamConstraints = { audio: false, video: { facingMode: 'user' } };
@@ -204,25 +216,58 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
             && faceValidator.distance.status
             && faceValidator.descriptor.status
             && faceValidator.age.status
-            && faceValidator.gender.status;
+            && faceValidator.gender.status
+            && faceValidator.boxWidth.status
+            && faceValidator.boxHeight.status
+            && faceValidator.faceAngleInRange.status;
     }
 
     const drawElipse = (force: boolean) => {
         if (!refcanvas.current) return
         const ctx = refcanvas.current.getContext('2d')
         if (!ctx) return
-        ctx.fillStyle = "rgba(242, 242, 242, 0.47)"
+
+        const isOkStatus = force || (faceValidator.lookingCenter.status && faceValidator.boxWidth.status && faceValidator.boxHeight.status && faceValidator.faceAngleInRange.status)
+
+        ctx.fillStyle = isOkStatus ? 'rgba(0,128,0, 0.47)': 'rgba(242, 242, 242, 0.47)' 
         ctx?.beginPath()
-        ctx?.ellipse(videoSize.width/2, videoSize.height/2, 120, 180, 0, 0, 2 * Math.PI)
+        ctx?.ellipse(videoSize.width/2, videoSize.height/2, options.boxSizeWidth, options.boxSizeHeight, 0, 0, 2 * Math.PI)
         ctx?.rect(videoSize.width, 0, -videoSize.width, videoSize.height)
         ctx.fill();
 
         ctx?.beginPath()
         ctx.lineWidth = 10
-        ctx?.ellipse(videoSize.width / 2, videoSize.height / 2, 120, 180, 0, 0, 2 * Math.PI)
+        ctx?.ellipse(videoSize.width / 2, videoSize.height / 2, options.boxSizeWidth, options.boxSizeHeight, 0, 0, 2 * Math.PI)
 
-        ctx.strokeStyle = force || (faceValidator.lookingCenter.status && faceValidator.distance.status) ? 'green' : 'red'
+        ctx.strokeStyle = isOkStatus ? 'green' : 'red'
         ctx?.stroke()
+
+        let text = ''
+
+        if(faceValidator.faceCount.status) {
+            if(!faceValidator.distance.status) {
+                if(faceValidator.distance.val < options.distanceMin) {
+                    text = 'Muito perto da camera'
+                } else {
+                    text = 'Muito longe da camera'
+                }
+            } else if (!faceValidator.faceAngleInRange.status) {
+                text = 'Centralize o rosto'
+            } else if(!faceValidator.boxWidth.status || !faceValidator.boxHeight.status) {
+                text = 'Ajuste a distancia do rosto'
+            }
+        }
+
+        if (force || text === '') {
+            text = 'Validando rosto...'
+        }
+
+        ctx.strokeStyle = 'white'
+        ctx.lineWidth = 1
+        ctx.fillStyle = 'green'
+        ctx.font = 'bold 22px sans-serif'
+        ctx?.strokeText(text, (videoSize.width / 2) - text.length * 5, videoSize.height - 10)
+        ctx?.fillText(text, (videoSize.width / 2) - text.length * 5, videoSize.height - 10 )
     }
 
     const drawFace = async (force: boolean) => {
@@ -267,6 +312,20 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
                 faceValidator.age.status = faceValidator.age.val > 0;
                 faceValidator.gender.val = human.result.face[0].genderScore || 0;
                 faceValidator.gender.status = faceValidator.gender.val >= options.minConfidence;
+                //Validando se o rosto esta dentro do quadrado
+                faceValidator.boxWidth.val = (face[0].size[0]/2) - 60;
+                faceValidator.boxHeight.val = (face[0].size[1]/2) + 50;
+
+                //log('- boxWidth (max: ' + faceValidator.boxWidth.val + ', min: ' + faceValidator.boxWidth.val * .7 + '  - boxHeight( max: ' + faceValidator.boxHeight.val + ', min: ' + faceValidator.boxHeight.val * .7)
+                //log(' Width ' + options.boxSizeWidth + ' - Height ' + + options.boxSizeHeight)
+
+                faceValidator.boxWidth.status = faceValidator.boxWidth.val <= options.boxSizeWidth && faceValidator.boxWidth.val >= options.boxSizeWidth * .7;
+                faceValidator.boxHeight.status = faceValidator.boxHeight.val <= options.boxSizeHeight && faceValidator.boxHeight.val >= options.boxSizeHeight * .7;
+
+                faceValidator.faceAngleInRange.val = [Math.abs(getAngleInDegrees(human.result.face[0].rotation.angle?.yaw)), Math.abs(getAngleInDegrees(human.result.face[0].rotation.angle?.pitch))]
+                log('Face Angle:( yaw: ' + faceValidator.faceAngleInRange.val[0] + ' - pitch: ' + faceValidator.faceAngleInRange.val[1])
+                log('Face maxAngle: ' + options.maxFaceAngleRange )
+                faceValidator.faceAngleInRange.status = faceValidator.faceAngleInRange.val[0] <= options.maxFaceAngleRange && faceValidator.faceAngleInRange.val[1] <= options.maxFaceAngleRange
             } 
             faceValidator.timeout.status = faceValidator.elapsedMs.val <= options.maxTime;
             if (allValidationsOk(faceValidator)) {
