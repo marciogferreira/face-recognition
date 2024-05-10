@@ -25,7 +25,7 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { onCapture, onFaceMatch, onCancel, userForMatch } = props
     
-    const debug = true
+    const debug = false
 
     const [loadinglib, setLoadingLib] = useState(true)
     //const [streamOk, setStreamOk] = useState(false)
@@ -213,8 +213,8 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
         if (!ctx) return
         ctx.fillStyle = "rgba(242, 242, 242, 0.47)"
         ctx?.beginPath()
-        ctx?.ellipse(320, 240, 120, 180, 0, 0, 2 * Math.PI)
-        ctx?.rect(640, 0, -640, 480)
+        ctx?.ellipse(videoSize.width/2, videoSize.height/2, 120, 180, 0, 0, 2 * Math.PI)
+        ctx?.rect(videoSize.width, 0, -videoSize.width, videoSize.height)
         ctx.fill();
 
         ctx?.beginPath()
