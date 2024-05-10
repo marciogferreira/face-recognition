@@ -219,7 +219,7 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
 
         ctx?.beginPath()
         ctx.lineWidth = 10
-        ctx?.ellipse(320, 240, 120, 180, 0, 0, 2 * Math.PI)
+        ctx?.ellipse(videoSize.width / 2, videoSize.height / 2, 120, 180, 0, 0, 2 * Math.PI)
 
         ctx.strokeStyle = force || (faceValidator.lookingCenter.status && faceValidator.distance.status) ? 'green' : 'red'
         ctx?.stroke()
