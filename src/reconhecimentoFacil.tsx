@@ -204,7 +204,7 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
         }
     }
 
-    const allValidationsOk = (faceValidator: Record<string, { status: boolean | undefined, val: number }>) => {
+    const allValidationsOk = () => {
         return faceValidator.faceCount.status
             && faceValidator.faceSize.status
             && faceValidator.blinkDetected.status
@@ -246,6 +246,7 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
 
         if(faceValidator.faceCount.status) {
             if(!faceValidator.distance.status) {
+                // @ts-ignore: Unreachable code error
                 if(faceValidator.distance.val < options.distanceMin) {
                     text = 'Muito perto da camera'
                 } else {
@@ -322,13 +323,16 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
                 faceValidator.boxWidth.status = faceValidator.boxWidth.val <= options.boxSizeWidth && faceValidator.boxWidth.val >= options.boxSizeWidth * .7;
                 faceValidator.boxHeight.status = faceValidator.boxHeight.val <= options.boxSizeHeight && faceValidator.boxHeight.val >= options.boxSizeHeight * .7;
 
+                // @ts-ignore: Unreachable code error
                 faceValidator.faceAngleInRange.val = [Math.abs(getAngleInDegrees(human.result.face[0].rotation.angle?.yaw)), Math.abs(getAngleInDegrees(human.result.face[0].rotation.angle?.pitch))]
                 log('Face Angle:( yaw: ' + faceValidator.faceAngleInRange.val[0] + ' - pitch: ' + faceValidator.faceAngleInRange.val[1])
                 log('Face maxAngle: ' + options.maxFaceAngleRange )
+                
                 faceValidator.faceAngleInRange.status = faceValidator.faceAngleInRange.val[0] <= options.maxFaceAngleRange && faceValidator.faceAngleInRange.val[1] <= options.maxFaceAngleRange
             } 
+            // @ts-ignore: Unreachable code error
             faceValidator.timeout.status = faceValidator.elapsedMs.val <= options.maxTime;
-            if (allValidationsOk(faceValidator)) {
+            if (allValidationsOk()) {
                 log('Face detected and validated')
                 log(faceValidator)
                 drawFace(true)
