@@ -3,13 +3,22 @@ import { useEffect, useState, useRef } from 'react'
 import { FaceResult, GestureResult, Human } from '@vladmandic/human'
 import { IUser } from './App'
 
+
+declare global {
+    class ImageCapture {
+        constructor(track: MediaStreamTrack);
+        takePhoto(): Promise<Blob>;
+    }
+}
 interface Iprops {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onCapture?: (data:any) => void;
-    onFaceMatch?: (faceid: Float32Array) => void;
+    onCapture?: (data:any, img: any) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onFaceMatch?: (faceid: Float32Array, img: any) => void;
     onCancel?: () => void;
     userForMatch?: IUser;
 }
+
 
 const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
 
@@ -21,6 +30,8 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
     const [loadinglib, setLoadingLib] = useState(true)
     //const [streamOk, setStreamOk] = useState(false)
     const [isCapturing, setIsCapturing] = useState(false)
+    const [videoSize, setVideoSize] = useState({ width: 640, height: 480 })
+    const [imageCapture, setImageCapture] = useState<ImageCapture | null>(null)	
 
     const refVideo = useRef<HTMLVideoElement>(null)
     const refcanvas = useRef<HTMLCanvasElement>(null)
@@ -91,8 +102,6 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
     let startTime = 0;
 
     const human = new Human(humanConfig)
-    const videoWidth = 640
-    const videoHeight = 480 
 
     useEffect(() => {
         human.load().then(() => {
@@ -120,6 +129,17 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
         await navigator.mediaDevices.getUserMedia(cameraOptions)
             .then((stream) => {
                 if (!refVideo.current || !refcanvas.current) return
+                const settings = stream.getVideoTracks()[0].getSettings()
+                if(settings.width && settings.height){
+                    setVideoSize({ width: settings.width, height: settings.height })
+                }
+                log(`camera settings: ${settings.width}x${settings.height} ${settings.frameRate}fps`)
+                try {
+                    setImageCapture(new ImageCapture(stream.getVideoTracks()[0]));
+                } catch (err) {
+                    log('ImageCapture not supported');
+                }
+
                 refVideo.current.srcObject = stream;
             })
             .catch((err) => {
@@ -139,24 +159,23 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
         }
     }
 
-    const onFaceFound = (curranteFace: FaceResult) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onFaceFound = (curranteFace: FaceResult, img: any) => {
         log(`detected face: ${curranteFace.gender} ${curranteFace.age || 0}y distance ${100 * (curranteFace.distance || 0)}cm/`);
         // @ts-ignore: Unreachable code error
-        refVideo.current?.srcObject?.getTracks().forEach( stream => stream.stop())
+        refVideo.current?.srcObject?.getVideoTracks().forEach( stream => stream.stop())
         
         const faceid = curranteFace.embedding
 
         if (onCapture) {
-            onCapture(faceid)
+            onCapture(faceid, img)
             return
         }
         if (faceid && onFaceMatch && userForMatch && userForMatch.faceid && userForMatch.faceid.length > 0) {
             // @ts-ignore: Unreachable code error
             const result = human.match.find(faceid, userForMatch.faceid , matchOptions)
             if(result?.similarity && result.similarity > options.threshold) {
-                //TODO: deveria retornar também uma foto?
-                
-                onFaceMatch(new Float32Array(faceid))
+                onFaceMatch(new Float32Array(faceid), img)
                 return
             }
             log('Face not match')
@@ -256,8 +275,10 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
                 drawFace(true)
                 //sleep for 2 second
                 await new Promise(r => setTimeout(r, 2000))
+                //get imagem from video
+                const img = await imageCapture?.takePhoto()
                 setIsCapturing(false)
-                onFaceFound(face[0])
+                onFaceFound(face[0], img)
                 return face[0]
             }
             if(!faceValidator.timeout.status) {
@@ -286,16 +307,16 @@ const ReconhecimentoFacial: React.FC<Iprops> = (props) => {
                         <canvas 
                             ref={refcanvas} 
                             id="canvas"
-                            height={videoHeight}
-                            width={videoWidth}
+                            height={videoSize.height}
+                            width={videoSize.width}
                             style={{ position:"fixed" }} >
                         </canvas>
                         <video
                             muted
                             autoPlay
                             ref={refVideo}
-                            height={videoHeight}
-                            width={videoHeight}
+                            height={videoSize.height}
+                            width={videoSize.width}
                             onPlay={scanFace}
                             playsInline
                             style={{

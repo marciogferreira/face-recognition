@@ -10,7 +10,9 @@ export default function PagePonto(props: { user: IUser }) {
     const [onError, setOnError] = useState<boolean>(false)
     const [pontoBatido, setPontoBatido] = useState<boolean>(false)
 
-    const onCaptureFace = (faceid: Float32Array) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onCaptureFace = (faceid: Float32Array, img: any) => {
+        console.log(img)
         console.log(faceid)
         const newUser = { name: user.name, faceid: [faceid] }
         localStorage.setItem('user', JSON.stringify(newUser))
@@ -24,7 +26,9 @@ export default function PagePonto(props: { user: IUser }) {
         setOnError(true)
     }
 
-    const onFaceMatch = (faceid: Float32Array) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onFaceMatch = (faceid: Float32Array, img: any) => {
+        console.log(img)
         setOnCapture(false)
         const ponto = JSON.parse(localStorage.getItem('ponto') ?? "[]")
         localStorage.setItem('ponto', JSON.stringify([...ponto, { faceid, date: new Date(), user: user.name, status: 'entrada'}]))
