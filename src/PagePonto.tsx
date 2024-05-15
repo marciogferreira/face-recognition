@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import ReconhecimentoFacial from './reconhecimentoFacil'
+import ReconhecimentoFacial from './reconhecimentoFacialjs'
 import { IUser } from './App'
 
 export default function PagePonto(props: { user: IUser }) {

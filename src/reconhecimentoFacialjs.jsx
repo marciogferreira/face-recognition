@@ -3,8 +3,10 @@ import { Human } from "@vladmandic/human"
 
 const ReconhecimentoFacial = props => {
     const { onCapture, onFaceMatch, onCancel, userForMatch } = props
+    const primaryColor = props?.primaryColor ?? "rgba(255, 165, 52, 1)"
+    const secondaryColor = props?.secondaryColor ?? "rgba(255, 255, 255, 1)"
 
-    const debug = true
+    const debug = false
 
     const [loadinglib, setLoadingLib] = useState(true)
     //const [streamOk, setStreamOk] = useState(false)
@@ -208,8 +210,8 @@ const ReconhecimentoFacial = props => {
             faceValidator.descriptor.status &&
             faceValidator.age.status &&
             faceValidator.gender.status &&
-            faceValidator.boxWidth.status &&
-            faceValidator.boxHeight.status &&
+            // faceValidator.boxWidth.status &&
+            // faceValidator.boxHeight.status &&
             faceValidator.faceAngleInRange.status
         )
     }
@@ -226,9 +228,7 @@ const ReconhecimentoFacial = props => {
                 faceValidator.boxHeight.status &&
                 faceValidator.faceAngleInRange.status)
 
-        ctx.fillStyle = isOkStatus
-            ? "rgba(0,128,0, 0.47)"
-            : "rgba(242, 242, 242, 0.47)"
+        ctx.fillStyle = secondaryColor
         ctx?.beginPath()
         ctx?.ellipse(
             videoSize.width / 2,
@@ -254,7 +254,7 @@ const ReconhecimentoFacial = props => {
             2 * Math.PI
         )
 
-        ctx.strokeStyle = isOkStatus ? "green" : "red"
+        ctx.strokeStyle = isOkStatus ? primaryColor : "red"
         ctx?.stroke()
 
         let text = ""
@@ -280,9 +280,9 @@ const ReconhecimentoFacial = props => {
             text = "Validando rosto..."
         }
 
-        ctx.strokeStyle = "white"
+        ctx.strokeStyle = secondaryColor
         ctx.lineWidth = 1
-        ctx.fillStyle = "green"
+        ctx.fillStyle = primaryColor
         ctx.font = "bold 22px sans-serif"
         ctx?.strokeText(
             text,
