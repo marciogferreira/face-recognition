@@ -4,7 +4,7 @@ import { Human } from "@vladmandic/human"
 const ReconhecimentoFacial = props => {
     const { onCapture, onFaceMatch, onCancel, userForMatch } = props
     const primaryColor = props?.primaryColor ?? "rgba(255, 165, 52, 1)"
-    const secondaryColor = props?.secondaryColor ?? "rgba(255, 255, 255, 1)"
+    const secondaryColor = props?.secondaryColor ?? "rgba(255, 255, 255, 0.2)"
 
     const debug = false
 

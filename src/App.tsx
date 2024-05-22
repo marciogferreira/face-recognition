@@ -1,72 +1,100 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useEffect, useState } from 'react'
-import PagePonto from './PagePonto'
+import ReconhecimentoFacial from './reconhecimentoFacialjs'
 
 import './App.css'
 
 export type IUser = {
-  name: string
-  faceid: Float32Array[]
+    name: string
+    faceid: Float32Array[]
 }
 
-function App() {
-
-  const [isOpenPontoPage, setIsOpenPontoPage] = useState(false)
-
-  const [user, setUser] = useState<IUser | null>(null)
-
-  const [userName, setUserName] = useState('')
-
-  useEffect(() => {
-    // find user on localstorage
-    const user = localStorage.getItem('user')
-    if (user) setUser(JSON.parse(user))
-  }, [])
-
-  const onSaveClient = (event: any) => {
-    event.preventDefault()
-    const newUser = { name: userName, faceid: []}
-    localStorage.setItem('user', JSON.stringify(newUser))
-    setUser(newUser)
+declare global {
+  interface Window {
+    ReactNativeWebView: {
+      postMessage: (message: string) => void;
+    };
   }
-
-
-  if (!user) {
-    return (
-          <div>
-            <h1>Sistema de Ponto</h1>
-            <h1>Cadastro de usuario</h1>
-            <div className="card">
-              <form>
-                <input type="text" placeholder="Nome" onChange={(e) => setUserName(e.target.value)} />
-                <button style={{ backgroundColor: 'green' }} type="submit" onClick={onSaveClient}>Cadastrar</button>
-              </form>
-            </div>
-          </div>
-    )
-  }
-
-  if (isOpenPontoPage) {
-    return (
-      <div>
-          <PagePonto user={user} />
-      </div>
-    )
-  }
-
-  return (
-    <>
-      <div>
-      </div>
-      <h1>Sistema de Ponto</h1>
-      <h2>Olá, {user.name}</h2>
-      <div className="">
-        <button style={{backgroundColor:'green'}} onClick={() => { setIsOpenPontoPage(true)}}>
-          Bater Ponto
-        </button>
-      </div>
-    </>
-  )
 }
 
-export default App
+export default function App() {
+
+  const EVENTS = {
+    CAPTURE: 'capture',
+    MATCH: 'match',
+    ERROR: 'error'
+  }
+
+    const [loading, setLoading] = useState<boolean>(true)
+    const [onCapture, setOnCapture] = useState<boolean>(false)
+    const [user, setUser] = useState<IUser>()
+
+    useEffect(() => {
+      document.addEventListener('message' as keyof DocumentEventMap, handleEvent as EventListener)
+      return () => {
+        document.removeEventListener('message' as keyof DocumentEventMap, handleEvent as EventListener)
+      }
+    }, [])
+
+    // useEffect(() => {
+    //   setTimeout(() => {
+    //     onCancel()
+    //   }
+    //   , 2000)
+    // }
+    // , [])
+
+    const handleEvent = (eventData: MessageEvent) => {
+      console.log(eventData)
+      const { event , payload } = JSON.parse(eventData.data)
+      
+      switch (event){
+        case EVENTS.CAPTURE:
+          setOnCapture(true)
+          setLoading(false)
+          break
+        case EVENTS.MATCH:
+          setLoading(false)
+          setUser(payload.user)
+          break
+        default:
+          break
+      }
+    
+    }
+
+    const sendPostMensage = (event: string, payload: object) => {
+      const msg = { event, payload };
+      window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+      console.log(msg);
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onCaptureFace = (faceid: Float32Array, _img: any) => {
+      sendPostMensage(EVENTS.MATCH, { faceid });
+    };
+
+    const onCancel = () => {
+      sendPostMensage(EVENTS.ERROR, { error: 'timeout' })
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onFaceMatch = (faceid: Float32Array, _img: any) => {
+      sendPostMensage(EVENTS.MATCH, { faceid })
+    }
+
+    const renderReconhecimento = () => {
+      return onCapture ? (
+        <ReconhecimentoFacial onCapture={onCaptureFace} onCancel={onCancel} />
+      ) : (
+        <ReconhecimentoFacial onFaceMatch={onFaceMatch} onCancel={onCancel} userForMatch={user} />
+      )
+    }
+
+    return !loading ? (
+      renderReconhecimento()
+    ) : (
+      <>
+      </>
+    )
+
+}
