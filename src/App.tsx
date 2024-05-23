@@ -70,7 +70,7 @@ export default function App() {
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onCaptureFace = (faceid: Float32Array, _img: any) => {
-      sendPostMensage(EVENTS.MATCH, { faceid });
+      sendPostMensage(EVENTS.CAPTURE, { faceid });
     };
 
     const onCancel = () => {
