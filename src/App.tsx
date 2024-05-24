@@ -69,8 +69,8 @@ export default function App() {
       console.log(msg);
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const onCaptureFace = (faceid: Float32Array, _img: any) => {
-      sendPostMensage(EVENTS.CAPTURE, { faceid });
+    const onCaptureFace = (faceid: Float32Array, img: any) => {
+      sendPostMensage(EVENTS.CAPTURE, { faceid, img });
     };
 
     const onCancel = () => {
@@ -78,8 +78,8 @@ export default function App() {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const onFaceMatch = (faceid: Float32Array, _img: any) => {
-      sendPostMensage(EVENTS.MATCH, { faceid })
+    const onFaceMatch = (faceid: Float32Array, img: any) => {
+      sendPostMensage(EVENTS.MATCH, { faceid, img })
     }
 
     const renderReconhecimento = () => {
