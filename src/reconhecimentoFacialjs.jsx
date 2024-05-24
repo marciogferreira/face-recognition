@@ -201,15 +201,15 @@ const ReconhecimentoFacial = props => {
             faceValidator.faceCount.status &&
             faceValidator.faceSize.status &&
             faceValidator.blinkDetected.status &&
-            faceValidator.facingCenter.status &&
+            //faceValidator.facingCenter.status &&
             faceValidator.lookingCenter.status &&
             faceValidator.faceConfidence.status &&
             faceValidator.antispoofCheck.status &&
             faceValidator.livenessCheck.status &&
             faceValidator.distance.status &&
             faceValidator.descriptor.status &&
-            faceValidator.age.status &&
-            faceValidator.gender.status &&
+            //faceValidator.age.status &&
+            //faceValidator.gender.status &&
             // faceValidator.boxWidth.status &&
             // faceValidator.boxHeight.status &&
             faceValidator.faceAngleInRange.status
