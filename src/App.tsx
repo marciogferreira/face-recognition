@@ -70,7 +70,9 @@ export default function App() {
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onCaptureFace = (faceid: Float32Array, img: any) => {
-      sendPostMensage(EVENTS.CAPTURE, { faceid, img });
+      const reader = new FileReader()
+      reader.readAsDataURL(img)
+      sendPostMensage(EVENTS.CAPTURE, { faceid, img: reader.result});
     };
 
     const onCancel = () => {
@@ -79,7 +81,9 @@ export default function App() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onFaceMatch = (faceid: Float32Array, img: any) => {
-      sendPostMensage(EVENTS.MATCH, { faceid, img })
+      const reader = new FileReader()
+      reader.readAsDataURL(img)
+      sendPostMensage(EVENTS.MATCH, { faceid, img: reader.result })
     }
 
     const renderReconhecimento = () => {

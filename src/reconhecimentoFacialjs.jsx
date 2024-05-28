@@ -200,7 +200,7 @@ const ReconhecimentoFacial = props => {
         return (
             faceValidator.faceCount.status &&
             faceValidator.faceSize.status &&
-            //faceValidator.blinkDetected.status &&
+            faceValidator.blinkDetected.status &&
             //faceValidator.facingCenter.status &&
             faceValidator.lookingCenter.status &&
             faceValidator.faceConfidence.status &&
