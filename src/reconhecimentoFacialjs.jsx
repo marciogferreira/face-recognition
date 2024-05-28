@@ -71,8 +71,8 @@ const ReconhecimentoFacial = props => {
         blinkMin: 10, // minimum duration of a valid blink
         blinkMax: 800, // maximum duration of a valid blink
         threshold: 0.5, // minimum similarity
-        distanceMin: 0.4, // closest that face is allowed to be to the cammera in cm
-        distanceMax: 0.62, // farthest that face is allowed to be to the cammera in cm
+        distanceMin: 0.3, // closest that face is allowed to be to the cammera in cm
+        distanceMax: 0.8, // farthest that face is allowed to be to the cammera in cm
         boxSizeWidth: 120, // size of face box
         boxSizeHeight: 180, // size of face box
         maxFaceAngleRange: 20,
@@ -200,7 +200,7 @@ const ReconhecimentoFacial = props => {
         return (
             faceValidator.faceCount.status &&
             faceValidator.faceSize.status &&
-            faceValidator.blinkDetected.status &&
+            //faceValidator.blinkDetected.status &&
             //faceValidator.facingCenter.status &&
             faceValidator.lookingCenter.status &&
             faceValidator.faceConfidence.status &&
