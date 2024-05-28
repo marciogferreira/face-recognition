@@ -65,14 +65,22 @@ export default function App() {
 
     const sendPostMensage = (event: string, payload: object) => {
       const msg = { event, payload };
-      window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+      const message = JSON.stringify(msg);
       console.log(msg);
+      try {
+        window.ReactNativeWebView.postMessage(message);
+      } catch (error) {
+        console.error(error);
+      }
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onCaptureFace = (faceid: Float32Array, img: any) => {
       const reader = new FileReader()
+
+      reader.onloadend = () => {
+        sendPostMensage(EVENTS.CAPTURE, { faceid, img: reader.result });
+      }
       reader.readAsDataURL(img)
-      sendPostMensage(EVENTS.CAPTURE, { faceid, img: reader.result});
     };
 
     const onCancel = () => {
@@ -82,8 +90,10 @@ export default function App() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onFaceMatch = (faceid: Float32Array, img: any) => {
       const reader = new FileReader()
+      reader.onloadend = () => {
+        sendPostMensage(EVENTS.MATCH, { faceid, img: reader.result })
+      }
       reader.readAsDataURL(img)
-      sendPostMensage(EVENTS.MATCH, { faceid, img: reader.result })
     }
 
     const renderReconhecimento = () => {
