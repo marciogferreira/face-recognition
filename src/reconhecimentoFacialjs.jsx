@@ -65,7 +65,7 @@ const ReconhecimentoFacial = props => {
     const matchOptions = { order: 2, multiplier: 25, min: 0.2, max: 0.8 } // for faceres model
 
     const options = {
-        minConfidence: 0.6, // overal face confidence for box, face, gender, real, live
+        minConfidence: 0.4, // overal face confidence for box, face, gender, real, live
         minSize: 224, // min input to face descriptor model before degradation
         maxTime: 30000, // max time before giving up
         blinkMin: 10, // minimum duration of a valid blink
@@ -75,7 +75,7 @@ const ReconhecimentoFacial = props => {
         distanceMax: 0.8, // farthest that face is allowed to be to the cammera in cm
         boxSizeWidth: 120, // size of face box
         boxSizeHeight: 180, // size of face box
-        maxFaceAngleRange: 20,
+        maxFaceAngleRange: 25,
         mask: humanConfig.face.detector.mask,
         rotation: humanConfig.face.detector.rotation,
         ...matchOptions
