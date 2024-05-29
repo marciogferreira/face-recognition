@@ -6,7 +6,7 @@ const ReconhecimentoFacial = props => {
     const primaryColor = props?.primaryColor ?? "rgba(255, 165, 52, 1)"
     const secondaryColor = props?.secondaryColor ?? "rgba(255, 255, 255, 0.2)"
 
-    const debug = false
+    const debug = true
 
     const [loadinglib, setLoadingLib] = useState(true)
     //const [streamOk, setStreamOk] = useState(false)
