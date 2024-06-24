@@ -83,9 +83,10 @@ export default function App() {
       const reader = new FileReader()
 
       alert("Capiturou Imagem")
+      sendPostMensage(EVENTS.CAPTURE, { faceid, img: reader.result });
       reader.onloadend = () => {
-        alert("Capiturou Imagem 2")
-        sendPostMensage(EVENTS.CAPTURE, { faceid, img: reader.result });
+        // alert("Capiturou Imagem 2")
+        // sendPostMensage(EVENTS.CAPTURE, { faceid, img: reader.result });
       }
       reader.readAsDataURL(img)
     };
