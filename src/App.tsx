@@ -31,9 +31,9 @@ export default function App() {
     const [debug, seDebug] = useState<string>('');
 
     useEffect(() => {
-        navigator.mediaDevices.getUserMedia({
-            video: true,
-          })
+      // navigator.mediaDevices.getUserMedia({
+      //   video: true,
+      // })
       document.addEventListener('message' as keyof DocumentEventMap, handleEvent as EventListener)
       return () => {
         document.removeEventListener('message' as keyof DocumentEventMap, handleEvent as EventListener)
