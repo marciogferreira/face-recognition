@@ -51,6 +51,7 @@ export default function App() {
     const handleEvent = (eventData: MessageEvent) => {
       console.log(eventData)
       const { event , payload } = JSON.parse(eventData.data)
+      alert(JSON.stringify(event));
       seDebug(JSON.stringify(event));
       switch (event){
         case EVENTS.CAPTURE:
