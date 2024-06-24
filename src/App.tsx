@@ -114,7 +114,7 @@ export default function App() {
       renderReconhecimento()
     ) : (
       <>
-        <h3> Carregando Biblioteca...</h3>
+        <h3> Carregando Biblioteca... {debug}</h3>
       </>
     )
 
