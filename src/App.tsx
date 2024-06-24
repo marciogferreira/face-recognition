@@ -28,6 +28,7 @@ export default function App() {
     const [loading, setLoading] = useState<boolean>(true)
     const [onCapture, setOnCapture] = useState<boolean>(false)
     const [user, setUser] = useState<IUser>()
+    const [debug, seDebug] = useState<string>('');
 
     useEffect(() => {
         navigator.mediaDevices.getUserMedia({
@@ -50,7 +51,7 @@ export default function App() {
     const handleEvent = (eventData: MessageEvent) => {
       console.log(eventData)
       const { event , payload } = JSON.parse(eventData.data)
-      
+      seDebug(JSON.stringify(event));
       switch (event){
         case EVENTS.CAPTURE:
           setOnCapture(true)
@@ -111,7 +112,7 @@ export default function App() {
       renderReconhecimento()
     ) : (
       <>
-        <h1>Não foi possível carregar o Reconhecimento Facial.</h1>
+        <h4>{debug} - Não foi possível carregar o Reconhecimento Facial.</h4>
       </>
     )
 
