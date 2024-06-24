@@ -111,6 +111,7 @@ export default function App() {
       renderReconhecimento()
     ) : (
       <>
+        <h1>Não foi possível carregar o Reconhecimento Facial.</h1>
       </>
     )
 
