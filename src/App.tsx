@@ -82,6 +82,7 @@ export default function App() {
     const onCaptureFace = (faceid: Float32Array, img: any) => {
       const reader = new FileReader()
 
+      alert("Capiturou Imagem")
       reader.onloadend = () => {
         sendPostMensage(EVENTS.CAPTURE, { faceid, img: reader.result });
       }
@@ -113,7 +114,7 @@ export default function App() {
       renderReconhecimento()
     ) : (
       <>
-        <h4>{debug} - Não foi possível carregar o Reconhecimento Facial.</h4>
+        <h3> Carregando Biblioteca...</h3>
       </>
     )
 
