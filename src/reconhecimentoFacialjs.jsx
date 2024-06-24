@@ -404,13 +404,13 @@ const ReconhecimentoFacial = props => {
             if (allValidationsOk()) {
                 log("Face detected and validated")
                 log(faceValidator)
-                alert("3")
+                // alert("3")
                 drawFace(true)
                 //sleep for 2 second
                 await new Promise(r => setTimeout(r, 2000))
                 //get imagem from video
                 const img = await imageCapture?.takePhoto()
-                alert("4")
+                // alert("4")
                 setIsCapturing(false)
                 onFaceFound(face[0], img)
                 return face[0]

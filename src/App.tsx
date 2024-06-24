@@ -51,7 +51,7 @@ export default function App() {
     const handleEvent = (eventData: MessageEvent) => {
       console.log(eventData)
       const { event , payload } = JSON.parse(eventData.data)
-      alert(JSON.stringify(event));
+      // alert(JSON.stringify(event));
       seDebug(JSON.stringify(event));
       switch (event){
         case EVENTS.CAPTURE:
@@ -82,7 +82,7 @@ export default function App() {
     const onCaptureFace = (faceid: Float32Array, img: any) => {
       const reader = new FileReader()
 
-      alert("Capiturou Imagem")
+      // alert("Capiturou Imagem")
       sendPostMensage(EVENTS.CAPTURE, { faceid, img: reader.result });
       reader.onloadend = () => {
         // alert("Capiturou Imagem 2")
@@ -98,8 +98,9 @@ export default function App() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onFaceMatch = (faceid: Float32Array, img: any) => {
       const reader = new FileReader()
+      sendPostMensage(EVENTS.MATCH, { faceid, img: reader.result })
       reader.onloadend = () => {
-        sendPostMensage(EVENTS.MATCH, { faceid, img: reader.result })
+        // sendPostMensage(EVENTS.MATCH, { faceid, img: reader.result })
       }
       reader.readAsDataURL(img)
     }
