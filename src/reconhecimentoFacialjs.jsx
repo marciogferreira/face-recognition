@@ -313,7 +313,7 @@ const ReconhecimentoFacial = props => {
             const face = human.result?.face
             faceValidator.faceCount.val = face.length
             faceValidator.faceCount.status = faceValidator.faceCount.val === 1
-            alert("1")
+            
             if (faceValidator.faceCount.status) {
                 //console.log('Face detected');
                 const gestures = Object.values(human.result.gesture).map(
@@ -400,7 +400,7 @@ const ReconhecimentoFacial = props => {
             }
             faceValidator.timeout.status =
                 faceValidator.elapsedMs.val <= options.maxTime
-            alert("2")
+            
             if (allValidationsOk()) {
                 log("Face detected and validated")
                 log(faceValidator)
