@@ -84,6 +84,7 @@ export default function App() {
 
       alert("Capiturou Imagem")
       reader.onloadend = () => {
+        alert("Capiturou Imagem 2")
         sendPostMensage(EVENTS.CAPTURE, { faceid, img: reader.result });
       }
       reader.readAsDataURL(img)
