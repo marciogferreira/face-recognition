@@ -3,8 +3,10 @@ import { Human } from "@vladmandic/human"
 
 const ReconhecimentoFacial = props => {
     const { onCapture, onFaceMatch, onCancel, userForMatch } = props
+    const primaryColor = props?.primaryColor ?? "rgba(255, 165, 52, 1)"
+    const secondaryColor = props?.secondaryColor ?? "rgba(255, 255, 255, 0.2)"
 
-    const debug = true
+    const debug = false
 
     const [loadinglib, setLoadingLib] = useState(true)
     //const [streamOk, setStreamOk] = useState(false)
@@ -63,17 +65,17 @@ const ReconhecimentoFacial = props => {
     const matchOptions = { order: 2, multiplier: 25, min: 0.2, max: 0.8 } // for faceres model
 
     const options = {
-        minConfidence: 0.6, // overal face confidence for box, face, gender, real, live
+        minConfidence: 0.4, // overal face confidence for box, face, gender, real, live
         minSize: 224, // min input to face descriptor model before degradation
         maxTime: 30000, // max time before giving up
         blinkMin: 10, // minimum duration of a valid blink
         blinkMax: 800, // maximum duration of a valid blink
         threshold: 0.5, // minimum similarity
-        distanceMin: 0.4, // closest that face is allowed to be to the cammera in cm
-        distanceMax: 0.62, // farthest that face is allowed to be to the cammera in cm
+        distanceMin: 0.3, // closest that face is allowed to be to the cammera in cm
+        distanceMax: 0.8, // farthest that face is allowed to be to the cammera in cm
         boxSizeWidth: 120, // size of face box
         boxSizeHeight: 180, // size of face box
-        maxFaceAngleRange: 20,
+        maxFaceAngleRange: 25,
         mask: humanConfig.face.detector.mask,
         rotation: humanConfig.face.detector.rotation,
         ...matchOptions
@@ -199,17 +201,17 @@ const ReconhecimentoFacial = props => {
             faceValidator.faceCount.status &&
             faceValidator.faceSize.status &&
             faceValidator.blinkDetected.status &&
-            faceValidator.facingCenter.status &&
+            //faceValidator.facingCenter.status &&
             faceValidator.lookingCenter.status &&
             faceValidator.faceConfidence.status &&
             faceValidator.antispoofCheck.status &&
             faceValidator.livenessCheck.status &&
             faceValidator.distance.status &&
             faceValidator.descriptor.status &&
-            faceValidator.age.status &&
-            faceValidator.gender.status &&
-            faceValidator.boxWidth.status &&
-            faceValidator.boxHeight.status &&
+            //faceValidator.age.status &&
+            //faceValidator.gender.status &&
+            // faceValidator.boxWidth.status &&
+            // faceValidator.boxHeight.status &&
             faceValidator.faceAngleInRange.status
         )
     }
@@ -226,9 +228,7 @@ const ReconhecimentoFacial = props => {
                 faceValidator.boxHeight.status &&
                 faceValidator.faceAngleInRange.status)
 
-        ctx.fillStyle = isOkStatus
-            ? "rgba(0,128,0, 0.47)"
-            : "rgba(242, 242, 242, 0.47)"
+        ctx.fillStyle = secondaryColor
         ctx?.beginPath()
         ctx?.ellipse(
             videoSize.width / 2,
@@ -254,7 +254,7 @@ const ReconhecimentoFacial = props => {
             2 * Math.PI
         )
 
-        ctx.strokeStyle = isOkStatus ? "green" : "red"
+        ctx.strokeStyle = isOkStatus ? primaryColor : "red"
         ctx?.stroke()
 
         let text = ""
@@ -280,9 +280,9 @@ const ReconhecimentoFacial = props => {
             text = "Validando rosto..."
         }
 
-        ctx.strokeStyle = "white"
+        ctx.strokeStyle = secondaryColor
         ctx.lineWidth = 1
-        ctx.fillStyle = "green"
+        ctx.fillStyle = primaryColor
         ctx.font = "bold 22px sans-serif"
         ctx?.strokeText(
             text,
@@ -313,6 +313,7 @@ const ReconhecimentoFacial = props => {
             const face = human.result?.face
             faceValidator.faceCount.val = face.length
             faceValidator.faceCount.status = faceValidator.faceCount.val === 1
+            
             if (faceValidator.faceCount.status) {
                 //console.log('Face detected');
                 const gestures = Object.values(human.result.gesture).map(
@@ -399,14 +400,17 @@ const ReconhecimentoFacial = props => {
             }
             faceValidator.timeout.status =
                 faceValidator.elapsedMs.val <= options.maxTime
+            
             if (allValidationsOk()) {
                 log("Face detected and validated")
                 log(faceValidator)
+                // alert("3")
                 drawFace(true)
                 //sleep for 2 second
                 await new Promise(r => setTimeout(r, 2000))
                 //get imagem from video
                 const img = await imageCapture?.takePhoto()
+                // alert("4")
                 setIsCapturing(false)
                 onFaceFound(face[0], img)
                 return face[0]
